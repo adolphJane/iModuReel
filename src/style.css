@@ -1,0 +1,129 @@
+*{box-sizing:border-box}body{margin:0;background:#10131a;color:#e8ecf5;font:14px -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid #3a4252;background:#242b38;color:#e8ecf5;border-radius:8px;padding:9px 14px}button:hover{background:#354054}.primary{background:#735af2;border-color:#735af2;color:white}.primary:hover{background:#6249dd}.app{display:flex;height:100vh}aside{width:220px;background:#171c26;border-right:1px solid #293141;padding:20px 12px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}aside button{text-align:left;border:0;background:transparent}.brand{font-size:20px;font-weight:700;padding:8px 10px 25px;color:#b8aaff}.spacer{flex:1}.active{background:#36304f!important;color:#c7baff}main{flex:1;min-width:0;overflow:auto}header{height:65px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #293141;padding:0 32px;color:#a9b1c2}header strong{color:white;font-size:17px}nav{display:flex;gap:4px;padding:14px 32px;border-bottom:1px solid #293141}nav button{border:0;background:transparent}.page{max-width:1080px;padding:30px 32px 80px;margin:auto}h1{font-size:28px;margin:5px 0 8px}h2{font-size:19px;margin:30px 0 15px}h3{margin:0 0 9px}p{color:#aab3c2;line-height:1.6}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin:28px 0}.card{text-align:left;min-height:130px;padding:20px}.selected{border-color:#8976ff;background:#302948}.panel,.shot,.track{border:1px solid #333d4c;background:#1b222d;padding:20px;border-radius:12px;margin:18px 0}label{display:block;color:#b9c2d1;margin:12px 0}input,textarea,select{border:1px solid #3a4555;background:#111722;color:white;border-radius:7px;padding:9px 11px;min-width:0}label>input,label>textarea{display:block;width:100%;margin-top:7px}textarea{resize:vertical}.row{display:flex;gap:10px;align-items:center;margin:12px 0;flex-wrap:wrap}.row>input{flex:1}.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}.alert{margin:15px 32px 0;padding:12px 16px;border-radius:8px;background:#244234;color:#b4f2ce}.error{background:#4a2830;color:#ffb9c5}.asset,.clip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px solid #333d4c;border-radius:8px;margin:8px 0;overflow:hidden}.asset span,.clip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.shot input,.shot textarea{width:100%;margin:6px 0}.shot .row input{width:120px}.clip label{font-size:11px;margin:0}.clip label input{display:block;width:80px;margin-top:4px}.clip>input{max-width:150px}.log{height:140px;overflow:auto;background:#0b1018;color:#9fc9a8;padding:12px;white-space:pre-wrap}
+
+.preview video,.preview img{display:block;max-width:100%;max-height:420px;margin:auto}.preview audio{width:100%}
+.engine-onboarding{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.engine-onboarding h3{margin:0}
+.timeline-board {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.timeline-track {
+  padding: 0;
+  margin: 8px 0 0;
+}
+
+.timeline-track .track-header {
+  position: sticky;
+  left: 0;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0;
+  padding: 8px 12px;
+}
+
+.timeline-track .track-header select {
+  max-width: 240px;
+}
+
+.track-header h3 {
+  max-width: 240px;
+  overflow-wrap: anywhere;
+}
+
+.track-rename {
+  margin: 0;
+}
+
+.timeline-ruler {
+  position: relative;
+  height: 30px;
+  box-shadow: inset 0 -1px #3a4555;
+  cursor: crosshair;
+  color: #b9c2d1;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-ruler:focus-visible {
+  outline: 2px solid #aa98ff;
+  outline-offset: -2px;
+}
+
+.timeline-tick {
+  position: absolute;
+  bottom: 1px;
+  height: 18px;
+  padding-left: 4px;
+  border-left: 1px solid #556174;
+  pointer-events: none;
+}
+
+.timeline-playhead {
+  position: absolute;
+  inset-block: 0;
+  width: 2px;
+  background: #f6b36b;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.timeline-clip.drop-before {
+  box-shadow: inset 3px 0 #c5b8ff;
+}
+
+.timeline-clip.drop-after {
+  box-shadow: inset -3px 0 #c5b8ff;
+}
+
+.project-navigation {
+  flex-wrap: wrap;
+}
+
+.project-backup {
+  margin-left: auto;
+}
+
+.backup-path {
+  overflow-wrap: anywhere;
+}
+
+.sidebar-projects {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.sidebar-projects button {
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.project-entry-info {
+  flex: 1 1 240px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.project-entry-info p, .project-entry .row {
+  margin: 0;
+}
+
+.analysis-fields {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+select{max-width:100%} label>select{display:block;margin-top:7px;width:100%}
+button:disabled{opacity:.45;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #aa98ff;outline-offset:2px}.inline-label{display:flex;align-items:center;gap:8px}.inline-label>input,.inline-label>select{width:auto;margin:0}.alert{display:flex;justify-content:space-between;gap:12px;align-items:center;white-space:pre-wrap;overflow-wrap:anywhere}.alert button{padding:2px 8px}.job{align-items:flex-start}.job p{margin:2px 0;white-space:pre-wrap;overflow-wrap:anywhere}.job-error{color:#ffb9c5}.job>div:first-child{min-width:0}.asset .row{flex-shrink:0}.code-field{font:13px ui-monospace,SFMono-Regular,Consolas,monospace}.track-header h3{margin:0;min-width:96px}.timeline-lane{height:55px;position:relative;background:#10141d;background-image:linear-gradient(to right,#354054 1px,transparent 1px);border-radius:6px}.timeline-clip{position:absolute;top:8px;height:39px;min-width:0;cursor:grab;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;text-align:left;padding:6px 8px;background:#303859}.timeline-clip:active{cursor:grabbing}.timeline-clip.active{border-color:#b8aaff}.clip-editor{max-width:640px}

@@ -1,0 +1,147 @@
+name: Desktop acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      windows_nvidia:
+        description: 'Run real ComfyUI templates on the Windows NVIDIA runner'
+        type: boolean
+        default: false
+      intel_comfy_url:
+        description: 'URL of an existing ComfyUI instance reachable by the Intel runner'
+        type: string
+        default: ''
+      previous_windows_app:
+        description: 'Absolute path to the previous iModuReel.exe on the NVIDIA runner'
+        type: string
+        default: ''
+      previous_windows_installer:
+        description: 'Absolute path to the previous NSIS installer for an in-place upgrade on the NVIDIA runner'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            package: dist:mac
+            arch: arm64
+            artifact: release/*-arm64.dmg
+          - os: macos-15-intel
+            package: dist:mac
+            arch: x64
+            artifact: release/*-x64.dmg
+          - os: windows-2022
+            package: dist:win
+            arch: x64
+            artifact: release/*.exe
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          architecture: ${{ matrix.arch }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run ${{ matrix.package }}
+      - name: Install and verify macOS package
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="$(find release -maxdepth 1 -name '*-${{ matrix.arch }}.dmg' -print -quit)"
+          node scripts/smoke-desktop.cjs --dmg "$image"
+      - name: Run the Intel package against an existing ComfyUI instance
+        if: matrix.os == 'macos-15-intel' && inputs.intel_comfy_url != ''
+        shell: bash
+        env:
+          IMODUREEL_INTEL_COMFY_URL: ${{ inputs.intel_comfy_url }}
+        run: |
+          set -euo pipefail
+          image="$(find release -maxdepth 1 -name '*-x64.dmg' -print -quit)"
+          npm run test:comfy -- --dmg "$image" --url "$IMODUREEL_INTEL_COMFY_URL" --suite templates --shot-duration 2 --job-checks --timeout 420 --output-dir "$RUNNER_TEMP/imodureel-intel-production"
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'macos-15-intel' && inputs.intel_comfy_url != ''
+        with:
+          name: imodureel-intel-production
+          path: ${{ runner.temp }}/imodureel-intel-production
+          if-no-files-found: error
+      - name: Install and verify Windows package
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem release -File -Filter '*.exe' | Where-Object { $_.Name -notmatch '__uninstaller' } | Select-Object -First 1
+          if (-not $installer) { throw 'NSIS installer not found' }
+          node scripts/smoke-desktop.cjs --installer $installer.FullName
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imodureel-${{ matrix.os }}-test-build
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
+
+  windows-nvidia:
+    if: inputs.windows_nvidia
+    runs-on: [self-hosted, Windows, X64, nvidia]
+    timeout-minutes: 120
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      IMODUREEL_PREVIOUS_APP: ${{ inputs.previous_windows_app }}
+      IMODUREEL_PREVIOUS_INSTALLER: ${{ inputs.previous_windows_installer }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Verify NVIDIA driver and install build dependencies
+        shell: pwsh
+        run: |
+          node electron/nvidia.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npm ci
+          exit $LASTEXITCODE
+      - run: npm test
+      - run: npm run dist:win
+      - name: Verify clean install and project recovery
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem release -File -Filter '*.exe' | Where-Object { $_.Name -notmatch '__uninstaller' } | Select-Object -First 1
+          if (-not $installer) { throw 'NSIS installer not found' }
+          node scripts/smoke-desktop.cjs --installer $installer.FullName
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($env:IMODUREEL_PREVIOUS_INSTALLER) {
+            node scripts/smoke-desktop.cjs --installer $installer.FullName --previous-installer $env:IMODUREEL_PREVIOUS_INSTALLER
+          } elseif ($env:IMODUREEL_PREVIOUS_APP) {
+            if (-not (Test-Path -LiteralPath $env:IMODUREEL_PREVIOUS_APP -PathType Leaf)) { throw 'Previous executable not found' }
+            node scripts/smoke-desktop.cjs --installer $installer.FullName --previous $env:IMODUREEL_PREVIOUS_APP
+          }
+          exit $LASTEXITCODE
+      - name: Run all templates through the installed desktop with managed and external CUDA
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem release -File -Filter '*.exe' | Where-Object { $_.Name -notmatch '__uninstaller' } | Select-Object -First 1
+          if (-not $installer) { throw 'NSIS installer not found' }
+          $engine = Join-Path $env:RUNNER_TEMP ("iModuReel engine " + [Guid]::NewGuid())
+          $samples = Join-Path $env:RUNNER_TEMP 'imodureel-production-samples'
+          node scripts/smoke-comfy.cjs --installer $installer.FullName --engine-dir $engine --install-engine --install-models --suite templates --shot-duration 2 --job-checks --timeout 1800 --output-dir (Join-Path $samples 'managed')
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          node scripts/smoke-comfy.cjs --installer $installer.FullName --engine-dir $engine --external-engine --suite templates --shot-duration 2 --job-checks --timeout 1800 --output-dir (Join-Path $samples 'external')
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: imodureel-windows-nvidia-production
+          path: ${{ runner.temp }}/imodureel-production-samples
+          if-no-files-found: error
